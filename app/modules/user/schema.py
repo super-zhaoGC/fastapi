@@ -1,7 +1,12 @@
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 from datetime import datetime
 
 class UserSchema(BaseModel):
+    # from_attributes: 允许从任意对象(含 SQLAlchemy ORM 实体)按属性读取，model_validate(User) 才能工作
+    # populate_by_name: 字段都声明了 alias(userId/createTime)，Pydantic v2 默认只按 alias 校验，
+    #   会把 ORM 实体的 user_id/create_time 当成缺失而静默取默认值 None，必须额外允许按字段名取值
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
     # 用户ID
     user_id: int | None = Field(default=None, alias="userId")
     # 用户名

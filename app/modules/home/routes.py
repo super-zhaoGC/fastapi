@@ -3,7 +3,7 @@ from app.core.logger import logger
 from app.db.session import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.user.model import User
+from app.modules.user.model import User
 from app.schemas.common import response_success
 
 home_router = APIRouter()

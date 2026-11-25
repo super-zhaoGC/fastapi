@@ -1,13 +1,12 @@
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 
-from app.schemas.common import response_success, response_error
-from app.schemas.login import LoginModel
 from pathlib import Path
 from app.core.config import settings
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.home.routes import home_router
+from app.modules.home.routes import home_router
+from app.modules.login.routes import login_router
 
 
 version="v1"
@@ -19,6 +18,7 @@ app = FastAPI(
 
 # 注册路由模块
 app.include_router(home_router,prefix=f"/api/{version}/home",tags=["home"])
+app.include_router(login_router,prefix=f"/api/{version}/login",tags=["login"])
 
 # 跨域配置
 # 这个配置就是告诉浏览器: "允许外部网站访问我"
