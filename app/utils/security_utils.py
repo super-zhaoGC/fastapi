@@ -1,4 +1,6 @@
 import bcrypt
+from app.core.exception_handler import ServiceError
+
 """
 密码加密工具类
 """
@@ -29,3 +31,28 @@ def check_password(password: str, hashed_password: str) -> bool:
     except ValueError:
         return False
 
+
+def get_user_id(current_user:dict):
+    """
+    从当前用户信息中获取用户ID
+    
+    注意: 登录时写入 JWT 的用户信息是 camelCase 结构
+    {"userId": 1, "user": {"userId": 1, ...}, ...},
+    所以这里必须按 "userId" 取值, 而不是 "user_id"。
+    
+    参数:
+        current_user: 当前登录用户的信息字典
+    
+    返回:
+        用户ID
+    
+    异常:
+        ServiceError: 用户ID不存在时抛出
+    """
+    user = current_user.get("user") or {}  # 嵌套的用户详细信息
+    user_id = current_user.get("userId")  # 顶层用户ID(登录 payload 里的键名)
+    if user_id is None:  # 顶层没有时回退到嵌套结构
+        user_id = user.get("userId")
+    if user_id is None:  # 判断user_id是否存在
+        raise ServiceError("用户ID不存在")  # 不存在则抛出业务异常
+    return user_id  # 返回用户ID

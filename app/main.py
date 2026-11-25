@@ -5,6 +5,7 @@ from pathlib import Path
 from app.core.config import settings
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.exception_handler import register_exception_handlers
 from app.modules.home.routes import home_router
 from app.modules.login.routes import login_router
 
@@ -15,6 +16,9 @@ app = FastAPI(
     title="FastAPI权限系统",
     version=version,
 )
+
+# 注册全局异常处理器(ServiceError -> 400 统一JSON, HTTPException -> 统一JSON)
+register_exception_handlers(app)
 
 # 注册路由模块
 app.include_router(home_router,prefix=f"/api/{version}/home",tags=["home"])

@@ -48,11 +48,11 @@ def parse_token(token:str)->dict|None:
     """
     try:
         return jwt.decode(token,settings.token_secret,algorithms=["HS256"])
-    except jwt.PyJWKError:
+    except jwt.PyJWTError:
         return None
 
 
-def get_login_user(token:str)->dict|None:
+def get_login_user(token:str|None)->dict|None:
     """
     从 JWT 令牌中提取登录用户信息
 

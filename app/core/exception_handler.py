@@ -4,6 +4,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 # 日志组件
 from loguru import logger
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
 
 # 统一错误响应 Schema
 from app.schemas.common import response_error
@@ -37,3 +39,9 @@ def register_exception_handlers(app: FastAPI):
         logger.error(f"业务异常: {exc.message}")
         # 返回 HTTP 400, 响应体为统一错误格式
         return JSONResponse(content=response_error(msg=exc.message), status_code=400)
+
+    # 注册StarletteHTTPException异常处理器
+    @app.exception_handler(StarletteHTTPException)
+    async def handle_http_exception(request: Request, exc: StarletteHTTPException):  # 处理HTTP异常
+        # 返回JSON响应，状态码使用异常的状态码，响应体包含错误码和错误信息
+        return JSONResponse(status_code=exc.status_code, content={"code":exc.status_code,"msg":str(exc.detail)})

@@ -35,3 +35,19 @@ class UserService:
         if user is None:
             return None
         return self._to_schema(user)
+
+    async def select_user_by_user_id(self, user_id: int, db: AsyncSession) -> dict | None:
+        """
+        通过用户ID查询用户信息
+        
+        参数:
+            user_id: 用户ID
+            db: 数据库会话
+        
+        返回:
+            用户信息字典，如果不存在则返回None
+        """
+        user = await db.get(User, user_id)  # 根据用户ID从数据库获取用户实体
+        if user is None:  # 判断用户是否存在
+            return None  # 不存在则返回None
+        return self._to_schema(user)  # 存在则序列化为字典并返回

@@ -6,8 +6,9 @@ from app.db.session import get_db
 from app.schemas.common import response_success
 from app.modules.login.schema import LoginModel, LoginResponse
 from app.modules.user.service import UserService
-from app.utils.security_utils import check_password
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.deps import get_current_user
+from app.utils.security_utils import get_user_id,check_password
 
 login_router = APIRouter()  # 创建登录路由实例
 user_service = UserService()  # 初始化用户服务实例
@@ -50,3 +51,19 @@ async def login(login_data: LoginModel, db: AsyncSession = Depends(get_db)):  # 
     token = token_service.create_token(login_user)  # 创建JWT令牌
 
     return response_success(token=token)  # 返回包含令牌的的成功响应
+
+@login_router.get("/getInfo")  # 定义获取用户信息接口，GET方法，路由为/getInfo
+async def get_info(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):  # 获取用户信息函数，通过依赖注入获取当前用户和数据库会话
+    """
+    获取用户信息接口
+    
+    参数:
+        current_user: 当前登录用户信息，通过get_current_user依赖注入获取
+        db: 数据库会话，通过get_db依赖注入获取
+    
+    返回:
+        包含用户信息的成功响应
+    """
+    user_id=get_user_id(current_user)  # 从当前用户依赖注入中获取用户ID
+    user=await user_service.select_user_by_user_id(user_id, db)  # 根据用户ID查询用户信息
+    return response_success(data=user)  # 返回包含用户信息的成功响应
