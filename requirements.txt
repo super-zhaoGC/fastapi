@@ -2,6 +2,7 @@ fastapi==0.141.1
 uvicorn==0.52.4
 sqlalchemy==2.0.52
 pymysql==1.2.0
+asyncmy==0.2.18
 pydantic==2.13.5
 pydantic-settings==2.15.0
 pyjwt==2.13.0

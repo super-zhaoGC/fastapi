@@ -41,7 +41,7 @@ class Settings(BaseSettings):
         mysql+pymysql://root:密码@localhost:3306/fastapi?charset=utf8mb4
         """
         return (
-            f"mysql+pymysql://{self.db_user}:{self.db_password}"
+            f"mysql+asyncmy://{self.db_user}:{self.db_password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}?charset=utf8mb4"
         )
 # 创建全局配置对象: 其他文件直接 from app.core.config import settings 使用即可
