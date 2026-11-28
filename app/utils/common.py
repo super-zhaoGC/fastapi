@@ -26,7 +26,7 @@ def response_success(msg:str="操作成功",data=None,**extra)->dict:
 def response_error(msg:str="操作失败",code:int=500)->dict:
     return {"code":code,"msg":msg}
 
-def handle_db(rows:int)->dict:
+def handle_data(rows:int)->dict:
     """
       根据受影响的行数判断操作是否成功
       :param rows:  数据库操作影响的行数

@@ -7,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.deps import get_current_user
 from app.db.session import get_db
+from app.modules.user.schema import UpdateProfile
 from app.modules.user.service import UserService
-from app.utils.common import response_error, response_success
+from app.utils.common import response_error, response_success, handle_data
 from app.utils.security_utils import get_user_id
 
 user_router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -55,3 +56,16 @@ async def avatar(file: UploadFile = File(...), current_user: dict = Depends(get_
         return response_success(imgUrl=avatar_url)
 
     return response_error("更新用户头像失败")
+
+@user_router.put("/profile", summary="更新用户个人信息")
+async def update_profile(profile_data:UpdateProfile,current_user:dict=Depends(get_current_user),db: AsyncSession = Depends(get_db)):
+    """
+    更新用户个人信息
+    :param profile_data: 更新个人信息的请求体
+    :param current_user: 当前登录用户信息
+    :param db: 数据库会话
+    :return:
+    """
+    user_id=get_user_id(current_user)
+    return handle_data(await user_service.update_profile(user_id,profile_data.user_name,profile_data.sex,db))
+

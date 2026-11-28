@@ -55,6 +55,11 @@ app = FastAPI(
     redoc_url=None,
 )
 
+# ---------------------------------------------------------------------------
+# 修正 OpenAPI 中文件上传字段的 schema（说明见文件末尾）
+# ---------------------------------------------------------------------------
+
+
 # 本地静态资源目录(swagger-ui / redoc 的 js、css)
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -115,3 +120,23 @@ app.add_middleware(
 profile_dir = Path(settings.fast_profile)
 profile_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/profile",StaticFiles(directory=profile_dir), name="profile")
+
+
+# ---------------------------------------------------------------------------
+# 修正 OpenAPI 中上传文件字段的 schema
+#
+# 问题: FastAPI 0.141 + Pydantic 2.13 把 UploadFile 描述成
+#   {"type": "string", "contentMediaType": "application/octet-stream"}
+# 而 /docs 使用的 Swagger UI(5.17) 只认 "format": "binary" 才会渲染「选择文件」按钮;
+# 只看到 contentMediaType 时它会渲染成一个普通文本框, 并填上一段随机的二进制
+# 示例值(界面上那串看不懂的乱码), 完全没法选文件。
+#
+# 处理: 首次生成 OpenAPI 后, 给这类字段补上 format: binary, 其余内容不变。
+# 必须放在所有 include_router / mount 之后, 否则生成出来的 schema 会漏掉路由。
+# ---------------------------------------------------------------------------
+_openapi_schema = app.openapi()  # 首次调用会生成并缓存到 app.openapi_schema
+for _component in (_openapi_schema.get("components", {}).get("schemas") or {}).values():
+    for _prop in (_component.get("properties") or {}).values():
+        if _prop.get("contentMediaType") == "application/octet-stream":
+            _prop["format"] = "binary"
+app.openapi_schema = _openapi_schema

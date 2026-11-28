@@ -104,7 +104,7 @@ class UserService:
         # 返回1表示注册成功
         return 1
 
-    async def update_user_avatar(self, user_id: int, db: AsyncSession, avatar: str)->int:
+    async def update_user_avatar(self, user_id: int, db: AsyncSession, avatar: str) -> int:
         """
         更新用户头像
         :param self:
@@ -117,5 +117,32 @@ class UserService:
         if user is None:
             return 0
         user.avatar = avatar
+        await db.commit()
+        return 1
+
+    async def update_profile(self, user_id: int, user_name: str | None, sex: int | None, db: AsyncSession) -> int:
+        """
+        更新用户个人信息
+        :param user_id: 用户ID
+        :param user_name: 用户名
+        :param sex: 用户性别
+        :param db: 数据库会话对象
+        :return: 更新成功返回1，否则返回0
+        """
+        # 根据用户ID从数据库查询用户对象
+        user = await db.get(User, user_id)
+        # 若用户不存在，则返回0表示更新失败
+        if user is None:
+            return 0
+
+        # 仅在提供用户名时更新用户名字段
+        if user_name:
+            user.user_name = user_name
+
+        # 仅在提供性别值时更新性别字段（注意：sex为0也视为有效值）
+        if sex is not None:
+            user.sex = sex
+
+        # 提交事务以保存所有更新
         await db.commit()
         return 1

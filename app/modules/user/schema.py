@@ -26,3 +26,13 @@ class UserSchema(BaseModel):
         if value is None:
             return None
         return value.strftime("%Y-%m-%d %H:%M:%S")
+
+class UpdateProfile(BaseModel):
+    """
+    更新用户个人信息
+    """
+    model_config = {"populate_by_name": True} # 允许按字段名取值
+
+    user_name:str|None=Field(default=None,alias="userName")
+    sex:int|None=None
+
