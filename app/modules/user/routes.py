@@ -7,10 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.deps import get_current_user
 from app.db.session import get_db
-from app.modules.user.schema import UpdateProfile
+from app.modules.user.schema import UpdateProfile, UpdatePassword
 from app.modules.user.service import UserService
 from app.utils.common import response_error, response_success, handle_data
-from app.utils.security_utils import get_user_id
+from app.utils.security_utils import get_user_id, check_password
 
 user_router = APIRouter(dependencies=[Depends(get_current_user)])
 user_service = UserService()
@@ -69,3 +69,29 @@ async def update_profile(profile_data:UpdateProfile,current_user:dict=Depends(ge
     user_id=get_user_id(current_user)
     return handle_data(await user_service.update_profile(user_id,profile_data.user_name,profile_data.sex,db))
 
+@user_router.put("/updatePwd",summary="更新用户密码")
+async def update_password(update_pwd_data:UpdatePassword,current_user:dict = Depends(get_current_user),db: AsyncSession = Depends(get_db)):
+    """
+    更新用户密码
+    :param update_pwd_data: 更新密码的请求体
+    :param current_user: 当前登录用户信息
+    :param db: 数据库会话
+    :return: 更新成功返回1，否则返回0
+    """
+
+    old_pwd=update_pwd_data.old_password
+    new_pwd=update_pwd_data.new_password
+
+    user_id=get_user_id(current_user)
+    user=await user_service.select_user_by_user_id(user_id,db)
+
+    password=(user or {}).get("password") or ""
+
+    if check_password(new_pwd, password):
+        return response_error("新密码不能与旧密码相同")
+    if not check_password(old_pwd, password):
+        return response_error("旧密码错误")
+
+    if await user_service.update_password(user_id,new_pwd,db)>0:
+        return response_success()
+    return response_error("更新密码失败，请稍后重试")

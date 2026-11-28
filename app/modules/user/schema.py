@@ -36,3 +36,13 @@ class UpdateProfile(BaseModel):
     user_name:str|None=Field(default=None,alias="userName")
     sex:int|None=None
 
+class UpdatePassword(BaseModel):
+    """
+    更新用户密码
+    """
+    model_config = {"populate_by_name": True}
+
+    old_password:str=Field(alias="oldPassword")
+    new_password:str=Field(alias="newPassword")
+    confirm_password:str=Field(alias="confirmPassword")
+

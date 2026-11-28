@@ -146,3 +146,18 @@ class UserService:
         # 提交事务以保存所有更新
         await db.commit()
         return 1
+
+    async def update_password(self,user_id:int,password:str,db: AsyncSession) -> int:
+        """
+        更新用户密码
+        :param user_id: 用户ID
+        :param password: 新密码
+        :param db: 数据库会话对象
+        :return: 更新成功返回1，否则返回0
+        """
+        user=await db.get(User, user_id)
+        if user:
+            user.password = encrypt_password(password)
+            await db.commit()
+            return 1
+        return 0
