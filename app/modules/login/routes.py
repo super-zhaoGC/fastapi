@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from app.core import token_service
 from app.core.exception_handler import ServiceError
 from app.db.session import get_db
-from app.schemas.common import response_success
+from app.utils.common import response_success
 from app.modules.login.schema import LoginModel, LoginResponse
 from app.modules.user.service import UserService
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,7 @@ login_router = APIRouter()  # 创建登录路由实例
 user_service = UserService()  # 初始化用户服务实例
 
 
-@login_router.post("/", response_model=LoginResponse)  # 定义登录接口，POST方法
+@login_router.post("", response_model=LoginResponse)  # 定义登录接口，POST方法
 async def login(login_data: LoginModel, db: AsyncSession = Depends(get_db)):  # 登录函数，接收登录数据和数据库会话
     """
     用户登录接口
@@ -67,3 +67,4 @@ async def get_info(current_user: dict = Depends(get_current_user), db: AsyncSess
     user_id=get_user_id(current_user)  # 从当前用户依赖注入中获取用户ID
     user=await user_service.select_user_by_user_id(user_id, db)  # 根据用户ID查询用户信息
     return response_success(data=user)  # 返回包含用户信息的成功响应
+

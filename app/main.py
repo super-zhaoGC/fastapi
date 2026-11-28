@@ -14,6 +14,7 @@ from app.core.exception_handler import register_exception_handlers
 from app.modules.home.routes import home_router
 from app.modules.login.routes import login_router
 from app.modules.user.routes import user_router
+from app.modules.register.routes import register_router
 
 
 version="v1"
@@ -88,6 +89,8 @@ register_exception_handlers(app)
 app.include_router(home_router,prefix=f"/home",tags=["home"])
 app.include_router(login_router,prefix=f"/login",tags=["login"])
 app.include_router(user_router,prefix=f"/system/user",tags=["user"])
+app.include_router(register_router,prefix=f"/register",tags=["register"])
+
 
 
 # 跨域配置

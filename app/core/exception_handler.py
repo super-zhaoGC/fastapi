@@ -8,7 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 # 统一错误响应 Schema
-from app.schemas.common import response_error
+from app.utils.common import response_error
 
 
 class ServiceError(Exception):

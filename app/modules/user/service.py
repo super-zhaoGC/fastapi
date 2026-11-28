@@ -3,9 +3,12 @@
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.user.model import User
+from app.core.exception_handler import ServiceError
+from app.modules.user.model import User, UserRole
 from app.modules.user.schema import UserSchema
 from sqlalchemy import select
+
+from app.utils.security_utils import encrypt_password
 
 
 class UserService:
@@ -51,3 +54,52 @@ class UserService:
         if user is None:  # 判断用户是否存在
             return None  # 不存在则返回None
         return self._to_schema(user)  # 存在则序列化为字典并返回
+
+    async def register_user(self,register_data:dict,db: AsyncSession) ->int:
+        """
+        注册新用户
+        
+        Args:
+            register_data: 包含注册信息的字典
+                - user_name: 用户名，用于登录系统
+                - password: 密码，将被加密存储
+            db: 数据库会话对象，用于执行数据库操作
+        
+        Returns:
+            int: 注册成功返回1
+        
+        Raises:
+            ServiceError: 当用户名已存在时抛出
+        """
+        # 第一步：校验用户名是否已被注册
+        # 从请求数据中提取用户名，若为空则默认为空字符串
+        user_name=register_data.get("userName")or ""
+        # 调用用户查询方法，检查该用户名是否已存在
+        existing=await self.select_user_by_user_name(db,user_name)
+        if existing is not None:
+            # 用户名已存在，抛出业务异常提示用户
+            raise ServiceError("用户名已存在")
+        
+        # 第二步：创建新用户并分配默认角色
+        # 使用加密函数对密码进行加密处理，确保密码安全存储
+        user=User(
+            user_name=user_name,
+            password=encrypt_password(register_data.get("password")or ""),
+        )
+        # 将新用户对象添加到数据库会话，此时还未提交到数据库
+        db.add(user)
+        # 执行flush操作，将用户信息刷新到数据库，获取用户ID等自增字段
+        await db.flush()
+        
+        # 导入角色ID常量，为新用户分配默认用户角色
+        from app.utils.constants import RoleIdConstants
+        # 创建用户角色关联记录，将用户与默认角色进行绑定
+        db.add(UserRole(
+            user_id=user.user_id,
+            role_id=RoleIdConstants.USER_ROLE_ID,
+        ))
+        
+        # 提交事务，将用户信息和角色关联信息一起持久化到数据库
+        await db.commit()
+        # 返回1表示注册成功
+        return 1

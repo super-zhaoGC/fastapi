@@ -17,3 +17,21 @@ class User(BaseModel):
     avatar: Mapped[str | None] = mapped_column(String(255), nullable=True, comment="用户头像")
     # 密码
     password: Mapped[str] = mapped_column(String(255), nullable=False, comment="密码")
+
+
+
+class Role(BaseModel):
+    """角色模型"""
+    __tablename__="role"
+    role_id:Mapped[int]=mapped_column(Integer,primary_key=True,comment="角色ID")
+    role_name:Mapped[str]=mapped_column(String(50),nullable=False,comment="角色名称")
+    role_sort:Mapped[int]=mapped_column(Integer,nullable=False,comment="角色排序")
+
+
+class UserRole(BaseModel):
+    """用户角色模型"""
+    __tablename__="user_role"
+
+    user_id:Mapped[int]=mapped_column(Integer,primary_key=True,comment="用户ID")
+    role_id:Mapped[int]=mapped_column(Integer,primary_key=True,comment="角色ID")
+

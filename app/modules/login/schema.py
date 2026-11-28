@@ -22,6 +22,8 @@ class LoginResponse(BaseModel):
     token: str
 
 class RegisterModel(BaseModel):
+    """注册请求模型"""
+    # 开启按字段赋值
+    model_config = {"populate_by_name":True}
     user_name: str=Field(alias="userName")
     password: str=Field(min_length=6,max_length=20)
-    age:int=Field(default=18,ge=1,le=120)
