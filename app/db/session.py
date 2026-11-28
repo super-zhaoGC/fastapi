@@ -12,6 +12,11 @@ engine = create_async_engine(
     pool_size=10,  # 最大连接数大小池
     pool_recycle=3600,  # 连接池回收时间(秒)
     echo=False,  # 是否打印SQL语句
+    # 每条连接建立后先设置会话时区。
+    # 原因：本机 MySQL 的 system_time_zone 是 UTC，而 create_time/update_time 用的
+    # server_default=func.now() / onupdate=func.now() 都是 MySQL 的 NOW()，
+    # 不设置就会把 UTC 写进库，比本地时间(东八区)慢 8 小时。
+    connect_args={"init_command": "SET time_zone = '+08:00'"},
 )
 
 # 创建会话工厂

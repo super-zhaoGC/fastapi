@@ -15,7 +15,7 @@ class UserService:
     # def __init__(self,db: AsyncSession):
     #     self.db = db
 
-    def _to_schema(self,user: User) -> dict:
+    def _to_schema(self, user: User) -> dict:
         """
         将 ORM 用户实体序列化为接口返回的 JSON 字典
 
@@ -28,7 +28,7 @@ class UserService:
         # 2. 序列化为字典: 使用字段别名作为键名，并应用 create_time 时间格式化
         return schema.model_dump(by_alias=True)
 
-    async def select_user_by_user_name(self,db: AsyncSession, user_name: str) -> dict | None:
+    async def select_user_by_user_name(self, db: AsyncSession, user_name: str) -> dict | None:
         """
         根据用户名查询用户
         """
@@ -55,7 +55,7 @@ class UserService:
             return None  # 不存在则返回None
         return self._to_schema(user)  # 存在则序列化为字典并返回
 
-    async def register_user(self,register_data:dict,db: AsyncSession) ->int:
+    async def register_user(self, register_data: dict, db: AsyncSession) -> int:
         """
         注册新用户
         
@@ -73,24 +73,24 @@ class UserService:
         """
         # 第一步：校验用户名是否已被注册
         # 从请求数据中提取用户名，若为空则默认为空字符串
-        user_name=register_data.get("userName")or ""
+        user_name = register_data.get("userName") or ""
         # 调用用户查询方法，检查该用户名是否已存在
-        existing=await self.select_user_by_user_name(db,user_name)
+        existing = await self.select_user_by_user_name(db, user_name)
         if existing is not None:
             # 用户名已存在，抛出业务异常提示用户
             raise ServiceError("用户名已存在")
-        
+
         # 第二步：创建新用户并分配默认角色
         # 使用加密函数对密码进行加密处理，确保密码安全存储
-        user=User(
+        user = User(
             user_name=user_name,
-            password=encrypt_password(register_data.get("password")or ""),
+            password=encrypt_password(register_data.get("password") or ""),
         )
         # 将新用户对象添加到数据库会话，此时还未提交到数据库
         db.add(user)
         # 执行flush操作，将用户信息刷新到数据库，获取用户ID等自增字段
         await db.flush()
-        
+
         # 导入角色ID常量，为新用户分配默认用户角色
         from app.utils.constants import RoleIdConstants
         # 创建用户角色关联记录，将用户与默认角色进行绑定
@@ -98,8 +98,24 @@ class UserService:
             user_id=user.user_id,
             role_id=RoleIdConstants.USER_ROLE_ID,
         ))
-        
+
         # 提交事务，将用户信息和角色关联信息一起持久化到数据库
         await db.commit()
         # 返回1表示注册成功
+        return 1
+
+    async def update_user_avatar(self, user_id: int, db: AsyncSession, avatar: str)->int:
+        """
+        更新用户头像
+        :param self:
+        :param user_id: 用户ID
+        :param db: 数据库会话对象
+        :param avatar: 头像URL
+        :return: 更新成功返回1，否则返回0
+        """
+        user = await db.get(User, user_id)
+        if user is None:
+            return 0
+        user.avatar = avatar
+        await db.commit()
         return 1
